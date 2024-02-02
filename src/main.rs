@@ -9,20 +9,26 @@ use tower_http::{
     services::{ServeDir},
 };
 
+use serde::Deserialize;
+
 // todo: create different svg image states for the tamagotchi state
 
 // todo: update struct to match payload structure
 
+#[derive(Deserialize)]
 struct CastId {
     fid: u32,
     hash: String,
 }
 
+#[derive(Deserialize)]
 struct UntrustedData {
     fid: u32,
     buttonIndex: u8,
     castId: CastId
 }
+
+#[derive(Deserialize)]
 struct FrameData {
     untrustedData: UntrustedData,
     trustedData: String,
