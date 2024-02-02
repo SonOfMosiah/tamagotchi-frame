@@ -2,7 +2,7 @@ pub fn generate_svg_with_color(fill_color: &str, option: u8) -> String {
     let pet_svg_path = generate_pet_svg_path(fill_color, option);
     format!("
     <svg id=\"svg\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"400\" height=\"213.33333333333334\" viewBox=\"0, 0, 400,213.33333333333334\">
-        <rect width=\"100%\" height=\"100%\" fill=\"#cccccc\"/>\
+        <rect width=\"100%\" height=\"100%\" fill=\"#dfdfdf\" fill-opacity=\"50%\"/>\
         {pet_svg_path}
     </svg>")
 }
