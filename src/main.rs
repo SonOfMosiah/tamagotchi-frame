@@ -1,8 +1,10 @@
 use axum::{
     Json,
-    response::Html,
+    response::{Html, IntoResponse, Response},
+    http::StatusCode,
     routing::{get, post},
     Router,
+    extract::Path,
 };
 
 use tower_http::{
@@ -16,6 +18,10 @@ use tamagotch_frame::generate_svg_with_color;
 // todo: create different svg image states for the tamagotchi state
 
 // todo: update struct to match payload structure
+
+struct TamagotchiId {
+    fid: String,
+}
 
 #[derive(Deserialize)]
 struct CastId {
@@ -88,10 +94,15 @@ async fn generate_html_response(image_url: &str, button_names: &[&str], post_url
     Html(html_content)
 }
 
+async fn get_tamagotchi(Path(TamagotchiId { fid }): Path<TamagotchiId>) -> impl IntoResponse {
+    // todo: get tamagotchi color + option from fid
+
+    let tamagotchi = generate_svg_with_color("cccccc", 1);
+    (StatusCode::OK, [("Content-Type", "image/svg+xml")], tamagotchi)
+}
+
 async fn initial_frame() -> Html<String> {
-    let image_url = "https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg";
-    // todo: svg should be dynamically generated with color and pet based on the fid
-    let image_url = generate_svg_with_color("cccccc", 1);
+    let image_url = "https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/1";
 
     let button_names = ["Feed", "Sleep", "Clean", "Play"];
     let post_url = "https://tamagotch-frame.shuttleapp.rs/api/frame";
@@ -107,11 +118,7 @@ async fn create_tamagotchi(Json(payload): Json<FrameData>) -> Html<String> {
     // todo: check if fid already has a tamagotchi
 
 
-    let image_url = "https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg";
-
-    // todo: svg should be dynamically generated with color and pet based on the fid
-    let image_url = generate_svg_with_color("cccccc", 1);
-
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Feed", "Sleep", "Clean", "Play"];
     let post_url = format!("https://tamagotch-frame.shuttleapp.rs/api/frame/{fid}");
     generate_html_response(&image_url, &button_names, &post_url).await
@@ -140,10 +147,10 @@ async fn handle_action_click(Json(payload): Json<FrameData>) -> Html<String> {
         _ => {}
     }
 
-    let image_url = "https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg";
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Feed", "Sleep", "Clean", "Play"];
     let post_url = "https://tamagotch-frame.shuttleapp.rs/api/frame";
-    generate_html_response(image_url, &button_names, post_url).await
+    generate_html_response(&image_url, &button_names, post_url).await
 }
 
 #[shuttle_runtime::main]
@@ -153,6 +160,7 @@ async fn main() -> shuttle_axum::ShuttleAxum {
         .route("/", get( initial_frame))
         .route("/api/create", post(create_tamagotchi))
         .route("/api/actions", post(handle_action_click))
+        .route("/api/tamagotchi/:fid", get(get_tamagotchi))
         .nest_service("/public", ServeDir::new("public"));
 
     // todo: initialize the db
