@@ -37,8 +37,8 @@ struct UntrustedData {
     message_hash: String,
     timestamp: u64,
     network: u8,
-    buttonIndex: u8,
-    castId: CastId,
+    button_index: u8,
+    cast_id: CastId,
 }
 
 #[derive(Deserialize)]
@@ -98,7 +98,7 @@ async fn generate_html_response(image_url: &str, button_names: &[&str], post_url
 async fn get_tamagotchi(Path(TamagotchiId { fid }): Path<TamagotchiId>) -> impl IntoResponse {
     // todo: get tamagotchi color + option from fid
 
-    let tamagotchi = generate_svg_with_color("cccccc", 1);
+    let tamagotchi = generate_svg_with_color("#000000", 1);
     (StatusCode::OK, [("Content-Type", "image/svg+xml")], tamagotchi)
 }
 
@@ -128,7 +128,7 @@ async fn create_tamagotchi(Json(payload): Json<FrameData>) -> Html<String> {
 async fn handle_action_click(Json(payload): Json<FrameData>) -> Html<String> {
     // todo: validate message
 
-    let button_index = payload.untrusted_data.buttonIndex;
+    let button_index = payload.untrusted_data.button_index;
     let fid = payload.untrusted_data.fid;
 
     // todo: update the tamagotchi state in the db
