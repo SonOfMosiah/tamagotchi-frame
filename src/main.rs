@@ -51,8 +51,7 @@ async fn main() -> shuttle_axum::ShuttleAxum {
                     <meta property=\"fc:frame:post_url\" content=\"https://tamagotchi-frame.fly.dev/api/frame\" />
                 </head>
             </html>
-        "))).nest_service("/public", ServeDir::new("public"))
-        .route("/tamagotchi.png", get(ServeFile::new("public/tamagotchi.png")));
+        "))).nest_service("/public", ServeDir::new("public"));
 
     Ok(router.into())
 }
