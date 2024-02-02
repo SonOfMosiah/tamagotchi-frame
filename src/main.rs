@@ -4,6 +4,10 @@ use axum::{
     Router,
 };
 
+use tower_http::{
+    services::{ServeDir, ServeFile},
+};
+
 // async fn hello_world() -> &'static str {
 //     "Hello, world!"
 // }
@@ -40,10 +44,15 @@ async fn main() -> shuttle_axum::ShuttleAxum {
                 <head>
                     <meta property=\"fc:frame\" content=\"vNext\" />
                     <meta property=\"fc:frame:image\" content=\"https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.png\" />
+                    <meta property=\"fc:frame:button:1\" content=\"Feed\" />
+                    <meta property=\"fc:frame:button:2\" content=\"Sleep\" />
+                    <meta property=\"fc:frame:button:3\" content=\"Clean\" />
+                    <meta property=\"fc:frame:button:4\" content=\"Play\" />
                     <meta property=\"fc:frame:post_url\" content=\"https://tamagotchi-frame.fly.dev/api/frame\" />
                 </head>
             </html>
-        ")));
+        "))).nest_service("/public", ServeDir::new("public"))
+        .route("/tamagotchi.png", get(ServeFile::new("public/tamagotchi.png")));
 
     Ok(router.into())
 }
