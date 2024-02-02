@@ -24,14 +24,23 @@ struct CastId {
 #[derive(Deserialize)]
 struct UntrustedData {
     fid: u32,
+    url: String,
+    messageHash: String,
+    timestamp: u64,
+    network: u8,
     buttonIndex: u8,
-    castId: CastId
+    castId: CastId,
+}
+
+#[derive(Deserialize)]
+struct TrustedData {
+    messageBytes: String,
 }
 
 #[derive(Deserialize)]
 struct FrameData {
     untrustedData: UntrustedData,
-    trustedData: String,
+    trustedData: TrustedData,
 }
 
 async fn initial_frame() -> Html<&'static str> {
