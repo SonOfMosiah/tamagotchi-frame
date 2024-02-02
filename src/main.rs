@@ -19,6 +19,7 @@ use tamagotch_frame::generate_svg_with_color;
 
 // todo: update struct to match payload structure
 
+#[derive(Deserialize)]
 struct TamagotchiId {
     fid: String,
 }
