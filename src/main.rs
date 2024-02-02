@@ -1,12 +1,14 @@
-use axum::{
-    response::Html,
-    routing::{get, post},
-    Router,
-};
-use tower_http::services::ServeDir;
+use axum::{routing::get, Router};
 
-#[tokio::main]
-async fn main() {
+// async fn hello_world() -> &'static str {
+//     "Hello, world!"
+// }
+
+#[shuttle_runtime::main]
+async fn main() -> shuttle_axum::ShuttleAxum {
+    // let router = Router::new().route("/", get(hello_world));
+
+    // todo: turn each route into a function
     let app = Router::new()
         .route("/", get( Html("
             <!DOCTYPE html>
@@ -44,4 +46,6 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+
+    Ok(router.into())
 }
