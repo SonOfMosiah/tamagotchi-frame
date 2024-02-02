@@ -1,4 +1,9 @@
-use axum::{routing::get, Router};
+use axum::{
+    response::Html,
+    routing::{get, post},
+    Router,
+};
+use tower_http::services::ServeDir;
 
 // async fn hello_world() -> &'static str {
 //     "Hello, world!"
@@ -9,7 +14,7 @@ async fn main() -> shuttle_axum::ShuttleAxum {
     // let router = Router::new().route("/", get(hello_world));
 
     // todo: turn each route into a function
-    let app = Router::new()
+    let router = Router::new()
         .route("/", get( Html("
             <!DOCTYPE html>
             <html lang=\"en\">
@@ -41,11 +46,11 @@ async fn main() -> shuttle_axum::ShuttleAxum {
                     <meta property=\"fc:frame:post_url\" content=\"https://tamagotchi-frame.fly.dev/api/frame\" />
                 </head>
             </html>
-        ")))
-        .nest_service("/public", ServeDir::new("public"));
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+        ")));
+    //     .nest_service("/public", ServeDir::new("public"));
+    //
+    // let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    // axum::serve(listener, router).await.unwrap();
 
     Ok(router.into())
 }
