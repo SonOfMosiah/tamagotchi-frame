@@ -34,7 +34,7 @@ struct CastId {
 struct UntrustedData {
     fid: u32,
     url: String,
-    messageHash: String,
+    message_hash: String,
     timestamp: u64,
     network: u8,
     buttonIndex: u8,
@@ -43,13 +43,13 @@ struct UntrustedData {
 
 #[derive(Deserialize)]
 struct TrustedData {
-    messageBytes: String,
+    message_bytes: String,
 }
 
 #[derive(Deserialize)]
 struct FrameData {
-    untrustedData: UntrustedData,
-    trustedData: TrustedData,
+    untrusted_data: UntrustedData,
+    trusted_data: TrustedData,
 }
 
 const MAX_NFTS: u32 = 1000;
@@ -114,7 +114,7 @@ async fn create_tamagotchi(Json(payload): Json<FrameData>) -> Html<String> {
     // todo: create a new tamagotchi in the db
     // todo: mint a new tamagotchi NFT if one of first MAX_NFTS is created
 
-    let fid = payload.untrustedData.fid;
+    let fid = payload.untrusted_data.fid;
 
     // todo: check if fid already has a tamagotchi
 
@@ -128,8 +128,8 @@ async fn create_tamagotchi(Json(payload): Json<FrameData>) -> Html<String> {
 async fn handle_action_click(Json(payload): Json<FrameData>) -> Html<String> {
     // todo: validate message
 
-    let button_index = payload.untrustedData.buttonIndex;
-    let fid = payload.untrustedData.fid;
+    let button_index = payload.untrusted_data.buttonIndex;
+    let fid = payload.untrusted_data.fid;
 
     // todo: update the tamagotchi state in the db
     match button_index {
