@@ -43,32 +43,46 @@ struct FrameData {
     trustedData: TrustedData,
 }
 
-async fn initial_frame() -> Html<&'static str> {
-    Html("
-        <!DOCTYPE html>
-        <html lang=\"en\">
+/// Generates HTML response for the tamagotchi frame with a dynamic image.
+///
+/// # Arguments
+///
+/// * `image_url` - A string slice that holds the URL of the image to be displayed.
+async fn generate_html_response(image_url: &str) -> Html<String> {
+    // Create the HTML content, interpolating the `image_url` where needed
+    let html_content = format!(
+        r#"<!DOCTYPE html>
+        <html lang="en">
             <head>
-                <meta charset=\"UTF-8\" />
-                <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>Tamagotchi Frame</title>
-                <meta property=\"og:title\" content=\"Tamagotchi Frame\" />
-                <meta property=\"og:image\" content=\"https://tamagotch-frame.shuttleapp.rs/tamagotchi.svg\" />
-                <meta property=\"fc:frame\" content=\"vNext\" />
-                <meta property=\"fc:frame:image\" content=\"https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg\" />
-                <meta property=\"fc:frame:button:1\" content=\"Feed\" />
-                <meta property=\"fc:frame:button:2\" content=\"Sleep\" />
-                <meta property=\"fc:frame:button:3\" content=\"Clean\" />
-                <meta property=\"fc:frame:button:4\" content=\"Play\" />
-                <meta property=\"fc:frame:post_url\" content=\"https://tamagotch-frame.shuttleapp.rs/api/frame\" />
+                <meta property="og:title" content="Tamagotchi Frame" />
+                <meta property="og:image" content="{image_url}" />
+                <meta property="fc:frame" content="vNext" />
+                <meta property="fc:frame:image" content="{image_url}" />
+                <meta property="fc:frame:button:1" content="Feed" />
+                <meta property="fc:frame:button:2" content="Sleep" />
+                <meta property="fc:frame:button:3" content="Clean" />
+                <meta property="fc:frame:button:4" content="Play" />
+                <meta property="fc:frame:post_url" content="https://tamagotch-frame.shuttleapp.rs/api/frame" />
             </head>
             <body>
                 <h1>Tamagotchi Frame</h1>
+                <img src="{image_url}" alt="Tamagotchi" />
             </body>
-        </html>
-    ")
+        </html>"#,
+        image_url = image_url
+    );
+
+    Html(html_content)
 }
 
-async fn handle_button_click(Json(payload): Json<FrameData>) -> Html<&'static str> {
+async fn initial_frame() -> Html<String> {
+    generate_html_response("https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg").await
+}
+
+async fn handle_button_click(Json(payload): Json<FrameData>) -> Html<String> {
     // todo: validate message
 
     // todo: get the button index
@@ -91,28 +105,7 @@ async fn handle_button_click(Json(payload): Json<FrameData>) -> Html<&'static st
         _ => {}
     }
 
-    Html("
-        <!DOCTYPE html>
-        <html lang=\"en\">
-            <head>
-                <meta charset=\"UTF-8\" />
-                <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
-                <title>Tamagotchi Frame</title>
-                <meta property=\"og:title\" content=\"Tamagotchi Frame\" />
-                <meta property=\"og:image\" content=\"https://tamagotch-frame.shuttleapp.rs/tamagotchi.svg\" />
-                <meta property=\"fc:frame\" content=\"vNext\" />
-                <meta property=\"fc:frame:image\" content=\"https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg\" />
-                <meta property=\"fc:frame:button:1\" content=\"Feed\" />
-                <meta property=\"fc:frame:button:2\" content=\"Sleep\" />
-                <meta property=\"fc:frame:button:3\" content=\"Clean\" />
-                <meta property=\"fc:frame:button:4\" content=\"Play\" />
-                <meta property=\"fc:frame:post_url\" content=\"https://tamagotch-frame.shuttleapp.rs/api/frame\" />
-            </head>
-            <body>
-                <h1>Tamagotchi Frame</h1>
-            </body>
-        </html>
-    ")
+    generate_html_response("https://tamagotch-frame.shuttleapp.rs/public/tamagotchi.svg").await
 }
 
 #[shuttle_runtime::main]
