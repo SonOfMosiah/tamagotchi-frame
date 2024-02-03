@@ -237,6 +237,10 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
             active_tamagotchi.happiness = ActiveValue::set(new_happiness);
             active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
+            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/sleeping.png";
+            let button_names = ["Done Eating"];
+            let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+            Ok(generate_html_response(&image_url, &button_names, &post_url).await)
         }
         2 => {
             let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
@@ -260,6 +264,10 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
             active_tamagotchi.happiness = ActiveValue::set(new_happiness);
             active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
+            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/sleeping.png";
+            let button_names = ["Done Sleeping"];
+            let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+            Ok(generate_html_response(&image_url, &button_names, &post_url).await)
         }
         3 => {
             let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
@@ -283,6 +291,10 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
             active_tamagotchi.happiness = ActiveValue::set(new_happiness);
             active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
+            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/cleaning.png";
+            let button_names = ["Done Cleaning"];
+            let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+            Ok(generate_html_response(&image_url, &button_names, &post_url).await)
         }
         4 => {
             // todo: send user to the game page (guess the number first)
@@ -307,14 +319,13 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
             active_tamagotchi.happiness = ActiveValue::set(new_happiness);
             active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
+            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/gaming.png";
+            let button_names = ["Done Playing"];
+            let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+            Ok(generate_html_response(&image_url, &button_names, &post_url).await)
         }
         _ => {}
     }
-
-    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
-    let button_names = ["Next Action"];
-    let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
-    Ok(generate_html_response(&image_url, &button_names, &post_url).await)
 }
 
 pub async fn guessing_game(Path(res): Path<(u32, u32)>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
