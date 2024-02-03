@@ -2,6 +2,7 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, ACCEPT};
 use serde_json::json;
 use serde::Deserialize;
 use std::env;
+use anyhow::anyhow;
 
 #[derive(Deserialize)]
 struct ValidationResponse {
@@ -15,7 +16,6 @@ pub async fn neynar_message_validation(message_bytes: &str) -> Result<bool, reqw
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
 
-    // todo: get the api key from the environment
     let api_key = env::var("NEYNAR_API_KEY").expect("NEYNAR_API_KEY must be set");
     headers.insert("api_key", HeaderValue::from_str(&api_key).expect("Invalid header value for api_key"));
 
