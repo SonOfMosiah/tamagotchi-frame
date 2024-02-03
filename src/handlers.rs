@@ -122,6 +122,8 @@ pub async fn connect_tamagotchi(
     // Attempt to find the existing Tamagotchi
     let tamagotchi_result = Tamagotchi::find_by_id(fid).one(&db).await;
 
+    println!("after find_by_id");
+
     // Handle potential database errors
     let tamagotchi = match tamagotchi_result {
         Ok(tamagotchi) => tamagotchi,
@@ -129,6 +131,8 @@ pub async fn connect_tamagotchi(
     };
 
     if tamagotchi.is_none() {
+        println!("Tamagotchi does not exist yet");
+
         let now = SystemTime::now().duration_since(UNIX_EPOCH)
             .map_err(|_| "Time went backwards")?;
         let seconds = now.as_secs();
@@ -150,19 +154,13 @@ pub async fn connect_tamagotchi(
         // Insert and handle potential database errors
         Tamagotchi::insert(new_tamagotchi).exec(&db).await
             .map_err(|e| format!("Insertion error: {}", e))?;
+    } else {
+        println!("Tamagotchi already exists");
     }
 
-    // // Extract the Host header from the request
-    // let host = req.headers().get("Host").and_then(|v| v.to_str().ok()).unwrap_or("");
-    //
-    // // Assuming HTTP for simplicity; you might need to adjust based on your deployment (e.g., HTTPS)
-    // let base_url = format!("http://{}", host);
-
-    let base_url = "https://tamagotch-frame.shuttleapp.rs";
-
-    let image_url = format!("{base_url}/api/tamagotchi/{fid}");
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Feed", "Sleep", "Clean", "Play"];
-    let post_url = format!("{base_url}/api/actions");
+    let post_url = "https://tamagotch-frame.shuttleapp.rs/api/actions";
 
     Ok(generate_html_response(&image_url, &button_names, &post_url).await)
 }
@@ -204,16 +202,8 @@ pub async fn handle_action_click(State(_db): State<DatabaseConnection>, Json(pay
         _ => {}
     }
 
-    // // Extract the Host header from the request
-    // let host = req.headers().get("Host").and_then(|v| v.to_str().ok()).unwrap_or("");
-    //
-    // // Assuming HTTP for simplicity; you might need to adjust based on your deployment (e.g., HTTPS)
-    // let base_url = format!("http://{}", host);
-
-    let base_url = "https://tamagotch-frame.shuttleapp.rs";
-
-    let image_url = format!("{base_url}/api/tamagotchi/{fid}");
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Next Action"];
-    let post_url = format!("{base_url}/api/connect");
+    let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
     generate_html_response(&image_url, &button_names, &post_url).await
 }
