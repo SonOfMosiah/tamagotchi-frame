@@ -324,7 +324,12 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
             Ok(generate_html_response(&image_url, &button_names, &post_url).await)
         }
-        _ => {}
+        _ => {
+            let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
+            let button_names = ["Next Action"];
+            let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+            Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+        }
     }
 }
 
