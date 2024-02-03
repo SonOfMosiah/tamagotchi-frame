@@ -191,17 +191,17 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
     println!("Button index: {}", button_index);
     println!("Fid: {}", fid);
 
-    let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
-        Ok(valid) => valid,
-        Err(e) => return Err(format!("Neynar error: {}", e)),
-    };
-
-    if !is_valid {
-        let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to "invalid" state
-        let button_names = ["Invalid Message - Try Again"];
-        let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
-        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
-    }
+    // let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
+    //     Ok(valid) => valid,
+    //     Err(e) => return Err(format!("Neynar error: {}", e)),
+    // };
+    //
+    // if !is_valid {
+    //     let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to "invalid" state
+    //     let button_names = ["Invalid Message - Try Again"];
+    //     let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+    //     return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    // }
 
     let tamagotchi_result = Tamagotchi::find_by_id(fid).one(&db).await;
 
@@ -237,7 +237,7 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
             active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
             active_tamagotchi.happiness = ActiveValue::set(new_happiness);
             active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
-            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/sleeping.png";
+            let image_url = "https://tamagotch-frame.shuttleapp.rs/public/dinner.png";
             let button_names = ["Done Eating"];
             let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
             Ok(generate_html_response(&image_url, &button_names, &post_url).await)
