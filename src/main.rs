@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use axum::{
     routing::{get, post},
     Router,
@@ -11,7 +10,6 @@ use tower_http::{
 use migration::{Migrator, MigratorTrait};
 
 use dotenv::dotenv;
-use mysql::prelude::*;
 use std::env;
 
 use tamagotch_frame::handlers::{initial_frame, connect_tamagotchi, handle_action_click, get_tamagotchi};

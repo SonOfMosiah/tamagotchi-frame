@@ -9,7 +9,6 @@ use crate::generate_svg_with_color;
 use crate::types::{FrameData, TamagotchiId};
 
 use entity::Entity as Tamagotchi;
-use entity::Model as TamagotchiModel;
 
 const TAMAGOTCHI_PET_OPTIONS: i64 = 3;
 
@@ -165,7 +164,7 @@ pub async fn connect_tamagotchi(
     Ok(generate_html_response(&image_url, &button_names, &post_url).await)
 }
 
-pub async fn handle_action_click(State(_db): State<DatabaseConnection>, Json(payload): Json<FrameData>) -> Html<String> {
+pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
     // todo: validate message
     println!("Received action click: {:?}", payload);
 
@@ -174,30 +173,110 @@ pub async fn handle_action_click(State(_db): State<DatabaseConnection>, Json(pay
     println!("Button index: {}", button_index);
     println!("Fid: {}", fid);
 
-    // let tamagotchi = match sqlx::query_as::<_, Tamagotchi>("SELECT * FROM tamagotchis WHERE fid = $1")
-    //     .bind(fid)
-    //     .fetch_one(&state.pool)
-    //     .await
-    // {
-    //     Ok(tamagotchi) => tamagotchi,
-    //     Err(e) => return Html(format!("Error fetching Tamagotchi: {}", e)), // Return an error page here
-    // };
-    //
-    // println!("Tamagotchi: {:?}", tamagotchi);
+    let tamagotchi_result = Tamagotchi::find_by_id(fid).one(&db).await;
+
+    let tamagotchi = match tamagotchi_result {
+        Ok(Some(model)) => model,
+        Ok(None) => return Err("Tamagotchi not found".to_string()),
+        Err(e) => return Err(format!("Database error: {}", e)),
+    };
+
+    let mut active_tamagotchi: entity::ActiveModel = tamagotchi.clone().into();
 
     // todo: update the tamagotchi state in the db
     match button_index {
         1 => {
-            // todo: feed the tamagotchi
+            let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?
+                .as_secs() - tamagotchi.last_interaction;
+
+            let elapsed_days = elapsed_time / 86400;
+            let attribute_decrease = elapsed_days as i8 * 100;
+
+            let new_hunger = if tamagotchi.hunger - attribute_decrease + 20 > 100 { 100 } else { tamagotchi.hunger - attribute_decrease + 20 };
+            let new_sleepiness = tamagotchi.sleepiness - attribute_decrease;
+            let new_dirtiness = tamagotchi.dirtiness - attribute_decrease;
+            let new_happiness = tamagotchi.dirtiness - attribute_decrease;
+
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?;
+            let seconds = now.as_secs();
+
+            active_tamagotchi.hunger = ActiveValue::set(new_hunger);
+            active_tamagotchi.sleepiness = ActiveValue::set(new_sleepiness);
+            active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
+            active_tamagotchi.happiness = ActiveValue::set(new_happiness);
+            active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
         }
         2 => {
-            // todo: put the tamagotchi to sleep
+            let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?
+                .as_secs() - tamagotchi.last_interaction;
+
+            let elapsed_days = elapsed_time / 86400;
+            let attribute_decrease = elapsed_days as i8 * 100;
+
+            let new_hunger = tamagotchi.hunger - attribute_decrease;
+            let new_sleepiness = if tamagotchi.sleepiness - attribute_decrease + 20 > 100 { 100 } else { tamagotchi.sleepiness - attribute_decrease + 20 };
+            let new_dirtiness = tamagotchi.dirtiness - attribute_decrease;
+            let new_happiness = tamagotchi.happiness - attribute_decrease;
+
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?;
+            let seconds = now.as_secs();
+
+            active_tamagotchi.hunger = ActiveValue::set(new_hunger);
+            active_tamagotchi.sleepiness = ActiveValue::set(new_sleepiness);
+            active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
+            active_tamagotchi.happiness = ActiveValue::set(new_happiness);
+            active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
         }
         3 => {
-            // todo: clean the tamagotchi
+            let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?
+                .as_secs() - tamagotchi.last_interaction;
+
+            let elapsed_days = elapsed_time / 86400;
+            let attribute_decrease = elapsed_days as i8 * 100;
+
+            let new_hunger = tamagotchi.hunger - attribute_decrease;
+            let new_sleepiness = tamagotchi.sleepiness - attribute_decrease;
+            let new_dirtiness = if tamagotchi.dirtiness - attribute_decrease + 20 > 100 { 100 } else { tamagotchi.dirtiness - attribute_decrease + 20 };
+            let new_happiness = tamagotchi.happiness - attribute_decrease;
+
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?;
+            let seconds = now.as_secs();
+
+            active_tamagotchi.hunger = ActiveValue::set(new_hunger);
+            active_tamagotchi.sleepiness = ActiveValue::set(new_sleepiness);
+            active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
+            active_tamagotchi.happiness = ActiveValue::set(new_happiness);
+            active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
         }
         4 => {
-            // todo: play with the tamagotchi
+            // todo: send user to the game page (guess the number first)
+            let elapsed_time = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?
+                .as_secs() - tamagotchi.last_interaction;
+
+            let elapsed_days = elapsed_time / 86400;
+            let attribute_decrease = elapsed_days as i8 * 100;
+
+            let new_hunger = tamagotchi.hunger - attribute_decrease;
+            let new_sleepiness = tamagotchi.sleepiness - attribute_decrease;
+            let new_dirtiness = tamagotchi.dirtiness - attribute_decrease;
+            let new_happiness = if tamagotchi.happiness - attribute_decrease + 20 > 100 { 100 } else { tamagotchi.happiness - attribute_decrease + 20 };
+
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|_| "Time went backwards")?;
+            let seconds = now.as_secs();
+
+            active_tamagotchi.hunger = ActiveValue::set(new_hunger);
+            active_tamagotchi.sleepiness = ActiveValue::set(new_sleepiness);
+            active_tamagotchi.dirtiness = ActiveValue::set(new_dirtiness);
+            active_tamagotchi.happiness = ActiveValue::set(new_happiness);
+            active_tamagotchi.last_interaction = ActiveValue::Set(seconds);
         }
         _ => {}
     }
@@ -205,5 +284,5 @@ pub async fn handle_action_click(State(_db): State<DatabaseConnection>, Json(pay
     let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Next Action"];
     let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
-    generate_html_response(&image_url, &button_names, &post_url).await
+    Ok(generate_html_response(&image_url, &button_names, &post_url).await)
 }
