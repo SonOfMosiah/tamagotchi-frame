@@ -1,6 +1,8 @@
 pub mod types;
 pub mod handlers;
 
+pub mod neynar;
+
 use axum::response::IntoResponse;
 
 pub fn generate_svg_with_color(fill_color: &str, option: i64) -> String {

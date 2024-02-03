@@ -1,5 +1,5 @@
 use axum::extract::{Path, State};
-use axum::http::{StatusCode, Request};
+use axum::http::{StatusCode};
 use axum::Json;
 use axum::response::{Html, IntoResponse};
 use sea_orm::{ActiveValue, DatabaseConnection, EntityTrait};
@@ -9,6 +9,7 @@ use crate::generate_svg_with_color;
 use crate::types::{FrameData, TamagotchiId};
 
 use entity::Entity as Tamagotchi;
+use crate::neynar;
 
 const TAMAGOTCHI_PET_OPTIONS: i64 = 3;
 
@@ -16,8 +17,6 @@ const TAMAGOTCHI_PET_OPTIONS: i64 = 3;
 // todo: 3 buttons A, B, C (select, confirm, menu/cancel)
 
 // todo: 8 icons (feed, light, duck, health meter, play, medicine, attention, discipline)
-
-
 
 /// Generates HTML response for the frame with a dynamic image, dynamic buttons, and dynamic post URL.
 ///
@@ -68,6 +67,8 @@ pub async fn get_tamagotchi(Path(TamagotchiId { fid }): Path<TamagotchiId>) -> i
     println!("Option: {}", option);
     println!("Color: {}", color);
 
+    // todo: include warnings/meters based on the tamagotchi's attributes
+
     let tamagotchi_image = generate_svg_with_color(&color, option);
     (StatusCode::OK, [("Content-Type", "image/svg+xml")], tamagotchi_image)
 }
@@ -116,6 +117,19 @@ pub async fn connect_tamagotchi(
     Json(payload): Json<FrameData>
 ) -> Result<Html<String>, String> {
     let fid = payload.get_fid();
+
+    let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
+        Ok(valid) => valid,
+        Err(e) => return Err(format!("Neynar error: {}", e)),
+    };
+
+    if !is_valid {
+        let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to "invalid" state
+        let button_names = ["Invalid Message - Try Again"];
+        let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    }
+
     let (option, color) = get_tamagotchi_options(fid);
 
     // Attempt to find the existing Tamagotchi
@@ -155,6 +169,11 @@ pub async fn connect_tamagotchi(
             .map_err(|e| format!("Insertion error: {}", e))?;
     } else {
         println!("Tamagotchi already exists");
+        // todo: update attributes since last interaction
+
+        // create function to update the tamagotchi's attributes
+
+        // todo: finally show a "dead" screen if any of the tamagotchi's attributes are 0
     }
 
     let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
@@ -165,13 +184,24 @@ pub async fn connect_tamagotchi(
 }
 
 pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
-    // todo: validate message
     println!("Received action click: {:?}", payload);
 
     let button_index = payload.get_button_index();
     let fid = payload.get_fid();
     println!("Button index: {}", button_index);
     println!("Fid: {}", fid);
+
+    let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
+        Ok(valid) => valid,
+        Err(e) => return Err(format!("Neynar error: {}", e)),
+    };
+
+    if !is_valid {
+        let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to "invalid" state
+        let button_names = ["Invalid Message - Try Again"];
+        let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    }
 
     let tamagotchi_result = Tamagotchi::find_by_id(fid).one(&db).await;
 
@@ -284,5 +314,65 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
     let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}");
     let button_names = ["Next Action"];
     let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+    Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+}
+
+pub async fn guessing_game(Path(res): Path<(u32, u32)>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
+    let (count, result) = res;
+
+    if (count == 0) {
+        let image_url = "https://tamagotch-frame.shuttleapp.rs/api/guess/1"; // todo: update image to show start game
+        let button_names = ["Start Game"];
+        let post_url = "https://tamagotch-frame.shuttleapp.rs/api/guess/1/0";
+        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    }
+
+    // gameplay: Pick to random numbers between 1 and 9 (they can't be the same)
+
+    // show the user one of the numbers and ask them to guess if the other number is higher or lower
+
+    // for each correct guess, the tamagotchi gets +5 happiness
+
+    // if the user guesses wrong, increment the count.
+
+    // if the count reaches 5, the tamagotchi gets -5 happiness
+
+    // repeat the game 5 times, then return the user to the main page
+
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to show number
+    let button_names = ["Lower", "Higher"];
+
+    if (count >= 5) {
+        let post_url = format!("https://tamagotch-frame.shuttleapp.rs/api/guessing_game_result/{count}");
+        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    }
+
+    let post_url = format!("https://tamagotch-frame.shuttleapp.rs/api/guess/{count}");
+    Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+}
+
+pub async fn guessing_game_result(Path(result): Path<u32>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
+    let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
+        Ok(valid) => valid,
+        Err(e) => return Err(format!("Neynar error: {}", e)),
+    };
+
+    if !is_valid {
+        let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to "invalid" state
+        let button_names = ["Invalid Message - Try Again"];
+        let post_url = "https://tamagotch-frame.shuttleapp.rs/api/connect";
+        return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
+    }
+
+    let mut happiness_increase = 5 * result;
+    if (happiness_increase == 0) {
+        // todo: decrease happiness by 5
+    } else {
+        // todo: update the db with the tamagotchi's new happiness level
+    }
+
+    let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/result/{result}"); // todo: update image to show number
+    let button_names = ["Next Action"];
+    let post_url = format!("https://tamagotch-frame.shuttleapp.rs/api/connect");
     Ok(generate_html_response(&image_url, &button_names, &post_url).await)
 }
