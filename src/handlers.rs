@@ -318,9 +318,10 @@ pub async fn handle_action_click(State(db): State<DatabaseConnection>, Json(payl
 }
 
 pub async fn guessing_game(Path(res): Path<(u32, u32)>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
+    let fid = payload.get_fid();
     let (count, result) = res;
 
-    if (count == 0) {
+    if count == 0 {
         let image_url = "https://tamagotch-frame.shuttleapp.rs/api/guess/1"; // todo: update image to show start game
         let button_names = ["Start Game"];
         let post_url = "https://tamagotch-frame.shuttleapp.rs/api/guess/1/0";
@@ -342,7 +343,7 @@ pub async fn guessing_game(Path(res): Path<(u32, u32)>, Json(payload): Json<Fram
     let image_url = format!("https://tamagotch-frame.shuttleapp.rs/api/tamagotchi/{fid}"); // todo: update image to show number
     let button_names = ["Lower", "Higher"];
 
-    if (count >= 5) {
+    if count >= 5 {
         let post_url = format!("https://tamagotch-frame.shuttleapp.rs/api/guessing_game_result/{count}");
         return Ok(generate_html_response(&image_url, &button_names, &post_url).await)
     }
@@ -352,6 +353,8 @@ pub async fn guessing_game(Path(res): Path<(u32, u32)>, Json(payload): Json<Fram
 }
 
 pub async fn guessing_game_result(Path(result): Path<u32>, Json(payload): Json<FrameData>) -> Result<Html<String>, String> {
+    let fid = payload.get_fid();
+
     let is_valid = match neynar::neynar_message_validation(&payload.get_message_bytes()).await {
         Ok(valid) => valid,
         Err(e) => return Err(format!("Neynar error: {}", e)),
@@ -365,7 +368,7 @@ pub async fn guessing_game_result(Path(result): Path<u32>, Json(payload): Json<F
     }
 
     let mut happiness_increase = 5 * result;
-    if (happiness_increase == 0) {
+    if happiness_increase == 0 {
         // todo: decrease happiness by 5
     } else {
         // todo: update the db with the tamagotchi's new happiness level
